@@ -1,0 +1,66 @@
+name: Construir y publicar la guía
+
+on:
+  schedule:
+    # Todos los días a las 05:00 UTC (07:00 en península). El catálogo de
+    # origen ya tiene cerrado el día anterior a esa hora.
+    - cron: "0 5 * * *"
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "tools/**"
+      - ".github/workflows/build.yml"
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Una sola publicación a la vez; no se cancela la que esté en curso para no
+# dejar Pages a medias.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  construir:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Generar la guía
+        run: python3 tools/build_epg.py --out public
+
+      - name: Resumen
+        run: |
+          python3 - <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          import json, pathlib
+          s = json.loads(pathlib.Path("public/estado.json").read_text())
+          print("| Dato | Valor |")
+          print("| --- | --- |")
+          for k, v in s.items():
+              if k.startswith("bytes_"):
+                  v = f"{v/1024/1024:.1f} MB"
+              print(f"| {k} | {v} |")
+          PY
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: public
+
+  publicar:
+    needs: construir
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
