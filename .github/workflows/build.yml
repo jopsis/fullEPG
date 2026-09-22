@@ -2,9 +2,14 @@ name: Construir y publicar la guía
 
 on:
   schedule:
-    # Todos los días a las 05:00 UTC (07:00 en península). El catálogo de
-    # origen ya tiene cerrado el día anterior a esa hora.
-    - cron: "0 5 * * *"
+    # Dos veces al día, y a una hora en punto rara a propósito.
+    #
+    # El planificador de GitHub no garantiza la hora: las tareas se encolan y,
+    # cuando hay cola, se retrasan o se descartan. Los minutos «:00» son los
+    # más disputados con diferencia, así que se evita. Y con dos pasadas, que
+    # una se pierda no deja la guía un día entero sin actualizar.
+    - cron: "23 4 * * *"
+    - cron: "23 16 * * *"
   workflow_dispatch:
   push:
     branches: [main]
