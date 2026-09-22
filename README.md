@@ -21,7 +21,15 @@ reproductor entiende.
 | Guía sin comprimir | https://jopsis.github.io/fullEPG/guia.xml |
 | Cifras de la última generación | https://jopsis.github.io/fullEPG/estado.json |
 
-Se regenera sola todos los días a las 05:00 UTC.
+Se regenera sola dos veces al día, a las 04:23 y a las 16:23 UTC. Son horas en
+punto raras a propósito: el planificador de GitHub encola las tareas y, cuando
+hay cola, retrasa o descarta las de los minutos más disputados.
+
+El resultado de cada pasada queda anotado en
+[`estado.json`](estado.json), en la raíz de este repositorio: cuándo se ejecutó,
+si fue bien y las cifras de la guía que salió. Ese commit cumple además una
+segunda función, que GitHub **desactiva los workflows programados cuando un
+repositorio lleva 60 días sin actividad**, y este no recibe otros commits.
 
 ## Qué trae
 

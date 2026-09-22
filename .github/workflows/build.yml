@@ -18,7 +18,8 @@ on:
       - ".github/workflows/build.yml"
 
 permissions:
-  contents: read
+  # `write` porque cada pasada anota su resultado en `estado.json`, en la raíz.
+  contents: write
   pages: write
   id-token: write
 
@@ -39,6 +40,7 @@ jobs:
           python-version: "3.12"
 
       - name: Generar la guía
+        id: generar
         run: python3 tools/build_epg.py --out public
 
       - name: Resumen
@@ -53,6 +55,25 @@ jobs:
                   v = f"{v/1024/1024:.1f} MB"
               print(f"| {k} | {v} |")
           PY
+
+      # Se anota pase lo que pase: saber que falló importa tanto como saber que
+      # fue bien, y el commit mantiene vivo el repositorio para que GitHub no
+      # apague el cron a los 60 días sin actividad.
+      - name: Anotar el estado
+        if: always()
+        run: |
+          python3 tools/write_status.py \
+            --result "${{ steps.generar.outcome }}" \
+            --run-url "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add estado.json
+          git commit -m "estado: ${{ steps.generar.outcome }}" -m "$(date -u +%Y-%m-%dT%H:%MZ)"
+          # Explícito y no por seguimiento: el checkout de una acción no
+          # siempre deja la rama configurada. Y con rebase por si otra pasada
+          # escribió mientras tanto.
+          git pull --rebase origin "${GITHUB_REF_NAME}"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
 
       - uses: actions/configure-pages@v5
 
