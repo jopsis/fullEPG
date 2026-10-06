@@ -1,14 +1,14 @@
 {
-  "ejecutado": "2026-10-05T22:49:08Z",
+  "ejecutado": "2026-10-06T11:23:00Z",
   "resultado": "success",
-  "ejecucion": "https://github.com/jopsis/fullEPG/actions/runs/37384526200",
+  "ejecucion": "https://github.com/jopsis/fullEPG/actions/runs/37455681360",
   "guia": {
-    "generado": "2026-10-05T22:49:08Z",
+    "generado": "2026-10-06T11:22:59Z",
     "canales": 138,
-    "programas": 27227,
-    "bytes_xml": 10314143,
-    "bytes_gz": 662547,
+    "programas": 29373,
+    "bytes_xml": 11147278,
+    "bytes_gz": 715237,
     "desde": "20260928190000 +0000",
-    "hasta": "20261018213700 +0000"
+    "hasta": "20261019214400 +0000"
   }
 }
