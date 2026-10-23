@@ -37,8 +37,10 @@ Alrededor de 140 canales y 29 000 programas, desde ocho días atrás hasta unos
 cuantos hacia delante. Pesa unos 700 KB comprimida.
 
 De cada programa: inicio, fin, título, título del episodio, género,
-calificación por edad y numeración de temporada/episodio cuando el origen la
-da. Nada más, a propósito: lo que descarga el conversor son más de 300 MB de
+calificación por edad, numeración de temporada/episodio cuando el origen la da
+y dos imágenes por HTTPS como `<icon>` estándar de XMLTV, con `width` y
+`height`: una apaisada (312x234, unos 15 KB) y una vertical (210x315), para que
+cada reproductor use la que le encaje en sus tarjetas. Nada más, a propósito: lo que descarga el conversor son más de 300 MB de
 los que el 58 % son metadatos comerciales que no pinta nada en una guía.
 
 Cada canal declara su nombre y las variantes de calidad corrientes

@@ -8,8 +8,9 @@ gratis en la misma petición.
 
 Salida: `guia.xml` y `guia.xml.gz`, con lo justo para que funcione una guía --
 canales con sus nombres, y programas con inicio, fin, título, episodio, género
-y descripción--. El resto de lo que devuelve el origen (paquetes comerciales,
-productos, imágenes en varios tamaños) es el 58 % del peso y no se usa.
+descripción e imágenes--. El resto de lo que devuelve el origen
+(paquetes comerciales, productos, imágenes en varios tamaños) es el 58 % del
+peso y no se usa.
 
 Sin dependencias: solo biblioteca estándar, para que la acción de GitHub no
 tenga que instalar nada.
@@ -39,6 +40,18 @@ TIMEOUT = 60
 RETRIES = 3
 WORKERS = 8
 USER_AGENT = "fullEPG/1.0 (+https://github.com/jopsis/fullEPG)"
+
+# Las imágenes de cada contenido las sirve un servidor de recortes: el último
+# tramo de la ruta (`smartv_list_portrait`, `samvod`…) es el recorte y el resto
+# identifica la imagen. El JSON solo da los verticales (pósters); estos dos
+# recortes existen para todos los contenidos y tienen siempre el mismo tamaño.
+# Se publican como `<icon>` con `width` y `height`, que el DTD de XMLTV admite
+# (`icon*`): el lector elige la proporción que le sirve.
+IMAGE_CROPS = (
+    ("smartv_list_landscape", 312, 234),
+    ("smartv_list_portrait", 210, 315),
+)
+CROP_PATTERN = re.compile(r"^(https?://[^/]+/recorte/[^/]+)/[^/]+/([^/?#]+)$")
 
 # Sufijos que las listas cuelgan del nombre del canal. Se emiten como
 # `display-name` adicionales para que un canal escrito «LA 1 HD» en la lista
@@ -134,7 +147,23 @@ def normalize(pase: dict, editorial: dict, fallback_code: str) -> dict | None:
         "rating": rating_of(editorial.get("NivelMoral")),
         "season": editorial.get("Temporada"),
         "episode": editorial.get("NumeroEpisodio"),
+        "images": image_of(editorial),
     }
+
+
+def image_of(editorial: dict) -> list[dict]:
+    """Las miniaturas del programa (apaisada y vertical), por HTTPS; vacío si no hay imagen."""
+    candidates = [i.get("uri") for i in editorial.get("Imagenes") or [] if i.get("id") == "default"]
+    candidates.append(editorial.get("Imagen"))
+    for uri in candidates:
+        match = CROP_PATTERN.match(uri or "")
+        if match:
+            base = match.group(1).replace("http://", "https://", 1)
+            return [
+                {"src": f"{base}/{crop}/{match.group(2)}", "width": width, "height": height}
+                for crop, width, height in IMAGE_CROPS
+            ]
+    return []
 
 
 def rating_of(value) -> str:
@@ -226,6 +255,11 @@ def build(output: Path, limit: int | None = None) -> dict:
                 lines.append(f"    <desc lang=\"es\">{esc(description)}</desc>")
             if programme["category"]:
                 lines.append(f"    <category lang=\"es\">{esc(programme['category'])}</category>")
+            for image in programme["images"]:
+                lines.append(
+                    f'    <icon src="{esc(image["src"])}"'
+                    f' width="{image["width"]}" height="{image["height"]}" />'
+                )
             numbering = episode_num(programme)
             if numbering:
                 lines.append(
